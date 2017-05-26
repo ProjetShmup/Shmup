@@ -19,6 +19,8 @@ start_t = time()
 
 fullscreen = 0
 ###########################################################################################################################################################################
+
+
 #Remplacement de la souris par une nouvelle personnalisée :
 
 pygame.mouse.set_visible ( False ) #on rend le curseur original invisible
@@ -28,9 +30,24 @@ souris = pygame.image.load("Images/Souris/souris.png").convert_alpha() #et on aj
 ###########################################################################################################################################################################
 #Chargement des pistes audio du jeu
 
-son_bouton=pygame.mixer.Sound("sfx/sfx_bouton.ogg")
-son_quitter=pygame.mixer.Sound("sfx/sfx_bouton_quitter.ogg")
-son_spawn=pygame.mixer.Sound("sfx/Spawn.ogg")
+son_bouton = pygame.mixer.Sound("sfx/sfx_bouton.ogg")
+son_quitter = pygame.mixer.Sound("sfx/sfx_bouton_quitter.ogg")
+son_spawn = pygame.mixer.Sound("sfx/Spawn.ogg")
+
+son_tirennemi = pygame.mixer.Sound("sfx/tir_ennemi.ogg")
+son_tirjoueur = pygame.mixer.Sound("sfx/tir_joueur.ogg")
+
+son_joueurtoucher = pygame.mixer.Sound("sfx/explosion_joueur.ogg")
+son_ennemitoucher = pygame.mixer.Sound("sfx/explosion_ennemi.ogg")
+
+son_credit = pygame.mixer.Sound("sfx/credit_ooh1.ogg")
+son_credit2 = pygame.mixer.Sound("sfx/credit_ooh2.ogg")
+son_credit3 = pygame.mixer.Sound("sfx/credit_ooh3.ogg")
+son_credit4 = pygame.mixer.Sound("sfx/credit_ooh4.ogg")
+son_credit5 = pygame.mixer.Sound("sfx/credit_ooh5.ogg")
+son_credit6 = pygame.mixer.Sound("sfx/credit_ooh6.ogg")
+son_credit7 = pygame.mixer.Sound("sfx/credit_ooh7.ogg")
+son_credit8 = pygame.mixer.Sound("sfx/credit_ooh8.ogg")
 
 Musique = randint(1,3)
 if Musique == 1:
@@ -53,7 +70,17 @@ Joueur = pygame.image.load("Images/Joueur.png").convert_alpha()
 pos_joueur = Joueur.get_rect()
 pos_joueur.bottomleft = (0,0)
 
+sprite_tir = pygame.image.load("Images/Tirs_1.png").convert_alpha()
+sprite_tir2 = pygame.image.load("Images/Tirs_2.png").convert_alpha()
+pos_tir = sprite_tir.get_rect()
+
 sprite_ennemie = pygame.image.load("Images/Ennemis.png").convert_alpha()
+pos_ennemie = sprite_ennemie.get_rect()
+
+listEnnemie = []
+listTir = []
+listTirEnnemie = []
+
 
 #_________________________________________________________#
 
@@ -67,18 +94,42 @@ une vie (le nombre de dégats que devra subir l'objet avant de se faire élimine
         self.vie = 3
         self.vitesse = 1
         self.rect.topleft = pos
+
     def afficher (self):
         fenetre.blit(self.image,self.rect.topleft)
-#    def move (self) :
-#        self.rect.bottom+=self.vitesse
+
+    def move (self) :
+        self.rect.bottom+=self.vitesse
+
     def delete (self) :
-        if self.rect.bottom > 768 :
-            listTir.remove(ennemie)
+        listEnnemie.remove(ennemie)
 
-sprite_tir = pygame.image.load("Images/Tirs_1.png").convert_alpha()
-pos_tir = sprite_tir.get_rect()
 
-listEnnemie = []
+#_________________________________________________________#
+
+class TirsEnnemie :
+
+    """classe définissant un projectile lancé par le sprite du joueur avec :
+une puissance (le nombre de dégats qu'il infligerai),
+une position (là où se trouve le sprite du joueur)"""
+
+
+    def __init__ (self, puissance, pos):
+
+        self.vitesse = 2 #vitesse d'un projectile (en pixels par frame)
+        #self.puissance = puissance
+        self.image = sprite_tir2
+        self.rect = self.image.get_rect()
+        self.rect.topleft = pos
+
+    def afficher (self) :
+        fenetre.blit(self.image,self.rect.topleft)
+
+    def move (self) :
+        self.rect.top+=self.vitesse
+
+    def delete (self) :
+        listTirEnnemie.remove(tir)
 
 #_________________________________________________________#
 
@@ -88,10 +139,9 @@ class TirsJoueur :
 une puissance (le nombre de dégats qu'il infligerai),
 une position (là où se trouve le sprite du joueur)"""
 
-
     def __init__ (self, puissance, pos):
 
-        self.vitesse = 1 #vitesse d'un projectile (en pixels par frame)
+        self.vitesse = 2 #vitesse d'un projectile (en pixels par frame)
         #self.puissance = puissance
         self.image = sprite_tir
         self.rect = self.image.get_rect()
@@ -99,16 +149,12 @@ une position (là où se trouve le sprite du joueur)"""
 
     def afficher (self) :
         fenetre.blit(self.image,self.rect.topleft)
-    
+
     def move (self) :
         self.rect.top-=self.vitesse
-    
-    def delete (self) :
-        if self.rect.top < 0 :
-            listTir.remove(tir)
 
-#Variable ""global"" contenant une liste de Tir
-listTir = []
+    def delete (self) :
+        listTir.remove(tir)
 
 
 ###########################################################################################################################################################################
@@ -144,7 +190,6 @@ pos_credits = credits.get_rect()
 pos_credits.bottom = 0
 
 
-
 ###########################################################################################################################################################################
 
 
@@ -172,8 +217,8 @@ pos_bouton_quitter.topleft = (406,480)
 ###########################################################################################################################################################################
 
 """Création du HUD en jeu"""
-
-score = 1000
+vie = 3
+score = 0
 vague = 1
 
 HUD = pygame.image.load("Images\HUD.png").convert_alpha()
@@ -188,11 +233,29 @@ vagueTexte = vaguePolice.render('{}'.format(vague),1,(255, 255, 255))
 
 def Blit_hud () :
     fenetre.blit(HUD, (pos_hud.left,pos_hud.top))
-    fenetre.blit(scoreTexte, (pos_hud.left + 50, pos_hud.top + 747))
-    fenetre.blit(vagueTexte, (pos_hud.left + 64, pos_hud.top + 710))
-    fenetre.blit(Joueur,(pos_joueur))
+    fenetre.blit(scoreTexte, (pos_hud.left + 50, pos_hud.top + 76))
+    fenetre.blit(vagueTexte, (pos_hud.left + 74, pos_hud.top + 37))
+    if vie == 3:
+        fenetre.blit(imagevie3,(pos_hud))
+    elif vie == 2 :
+        fenetre.blit(imagevie2,(pos_hud))
+    elif vie == 1 :
+        fenetre.blit(imagevie,(pos_hud))
 
-    
+
+imagevie3 = pygame.image.load("Images/ViePleine.png")
+pos_imagevie3 = imagevie3.get_rect()
+pos_imagevie3.topleft = (0,(pos_hud.top))
+
+imagevie2= pygame.image.load("Images/Vie2.png")
+pos_imagevie2 = imagevie2.get_rect()
+pos_imagevie2.topleft = (0,(pos_hud.top))
+
+imagevie = pygame.image.load("Images/Vie1.png")
+pos_imagevie = imagevie.get_rect()
+pos_imagevie.topleft = (0,(pos_hud.top))
+
+
 ###########################################################################################################################################################################
 
 
@@ -227,7 +290,7 @@ def boucle_defilement_etoiles2 () :
     position_etoiles3.topleft = (0,0)
     position_etoiles3bis = position_etoiles3.copy()
     position_etoiles3bis.bottomleft = (0,0)
-    
+
 def defilement_fond () :
     if positionbis.bottom == 1152 :
         boucle_defilement_etoiles1()
@@ -237,7 +300,7 @@ def defilement_fond () :
         boucle_defilement_etoiles1()
     elif position_etoiles3bis.bottom == 1800 :
         boucle_defilement_etoiles3()
-    
+
 def blit_fond() :
     fenetre.blit(fond, (position))
     fenetre.blit(fond, (positionbis))
@@ -254,7 +317,7 @@ def blit_menu() :
     fenetre.blit(bouton_quitter, (pos_bouton_quitter))
     fenetre.blit(titre, (pos_titre))
     fenetre.blit(credits,(pos_credits))
-    
+
 def aff_plein_ecran():
     fenetre = pygame.display.set_mode((768, 768), pygame.FULLSCREEN)
     global fullscreen
@@ -265,8 +328,6 @@ def aff_fenetre ():
     fullscreen = 0
     fenetre = pygame.display.set_mode((768, 768))
 
-
-
 ###########################################################################################################################################################################
 
 #Rafraîchissement de l'écran
@@ -275,7 +336,7 @@ pygame.display.flip()
 #Vitesse du défillement de l'arrière-plan / définition de la parallaxe :
 ## Ex : toutes les 1.5 secondes l'évennement "scroll", correspondant au défillement de l'image de fond, sera appellé.
 scroll = USEREVENT
-pygame.time.set_timer(scroll, 1500)
+pygame.time.set_timer(scroll, 2000)
 
 scroll2 = USEREVENT+1
 pygame.time.set_timer(scroll2, 750)
@@ -284,7 +345,7 @@ scroll3 = USEREVENT+2
 pygame.time.set_timer(scroll3, 500)
 
 scroll4 = USEREVENT+3
-pygame.time.set_timer(scroll4, 150)
+pygame.time.set_timer(scroll4, 300)
 
 #défilement du menu quand l'utilisateur clique sur un bouton
 scroll_menu = USEREVENT+4
@@ -292,7 +353,8 @@ scroll_menu_credits = USEREVENT+5
 scroll_hud = USEREVENT+6
 scroll_joueur = USEREVENT + 7
 
-
+spawn_ennemie = USEREVENT
+pygame.time.set_timer(spawn_ennemie, 2000)
 ###########################################################################################################################################################################
 
 
@@ -355,11 +417,13 @@ while True:
             if 769>=pos_hud.top>=673:
                 pos_hud = pos_hud.move(0,-1)
 
+        if event.type == spawn_ennemie and pos_hud.top <= 674:
+            pos = randint(0, 735)
+            listEnnemie.append(Ennemie(1,(pos,0)))
+
         if event.type == scroll_joueur:
             if 1076>=pos_joueur.bottom>=692:
                 pos_joueur = pos_joueur.move(0,-1)
-
-
 
         if jeu == 0 : #Lorsqu'on est sur le menu
 
@@ -370,7 +434,7 @@ while True:
                 if event.type == MOUSEBUTTONDOWN and event.button == 1 and pos_bouton_quitter.top < event.pos[1] < pos_bouton_quitter.bottom and pos_bouton_quitter.left < event.pos[0] < pos_bouton_quitter.right:
                     pygame.mixer.Sound.play(son_quitter)
                     pygame.time.wait(500)
-                    
+
             #bouton jeu
                 elif event.type == MOUSEBUTTONDOWN and event.button == 1 and pos_bouton_jeu.top < event.pos[1] < pos_bouton_jeu.bottom and pos_bouton_jeu.left < event.pos [0] < pos_bouton_jeu.right:
                     pygame.mixer.Sound.play(son_bouton)
@@ -391,7 +455,7 @@ while True:
                 elif event.type == MOUSEBUTTONUP and event.button == 1 and pos_bouton_jeu.top < event.pos[1] < pos_bouton_jeu.bottom and pos_bouton_jeu.left < event.pos [0] < pos_bouton_jeu.right:
                     jeu = 1
 
-                    
+
             #bouton credits
                 elif event.type == MOUSEBUTTONUP and event.button == 1 and pos_bouton_credit.top < event.pos[1] < pos_bouton_credit.bottom and pos_bouton_credit.left < event.pos [0] < pos_bouton_credit.right:
                     pygame.mixer.music.fadeout(300)
@@ -408,44 +472,70 @@ while True:
             if pos_titre.top == 700 :
                 pygame.mixer.music.fadeout(300)
                 pygame.mixer.Sound.play(son_spawn)
-                
-                pos_joueur.bottomleft = (369,692+96)
+
+                pos_joueur.bottomleft = (370,692+96)
                 pygame.time.set_timer(scroll_hud, 40)
                 pygame.time.set_timer (scroll_joueur, 80)
-                
+
                 pygame.mixer.music.load("Musiques/loop_jeu.ogg")
                 pygame.mixer.music.play(-1)
                 pygame.mixer.music.set_volume(0.2)
-                
-            
-            #last_time = time()
-                
+
+
+
             if event.type == KEYDOWN :
 
                 if event.key == K_LEFT and pos_joueur.left >= 0:
-                    pos_joueur = pos_joueur.move(-2,0)
-                    
+                    pos_joueur = pos_joueur.move(-4,0)
+
                 if event.key == K_RIGHT and pos_joueur.right <= 768:
-                    pos_joueur = pos_joueur.move(2,0)
-                    
+                    pos_joueur = pos_joueur.move(4,0)
+
                 if event.key == K_SPACE :
                     repetition(0,0)
                     listTir.append(TirsJoueur(1,(pos_joueur.left + 10,pos_joueur.top - 20)))
+                    pygame.mixer.Sound.play(son_tirjoueur)
 
-                if event.key == K_n :
-                    pos = randint(0, 724)
-                    listEnnemie.append(Ennemie(1,(pos,0)))
-                    
+            for ennemie in listEnnemie :
+                if event.type == scroll2 and pos_hud.top <= 674:
+                    listTirEnnemie.append(TirsEnnemie(1,(ennemie.rect.left + 17,ennemie.rect.bottom - 25)))
+                    pygame.mixer.Sound.play(son_tirennemi)
+
             if event.type == KEYUP :
-                
+
                 if event.key == K_SPACE :
                     repetition(10,10)
-                
+
+    if jeu == 2:
+        if pos_credits.bottomleft == (0,75):
+            pygame.mixer.Sound.play(son_credit)
+
+        if pos_credits.bottomleft == (0,200):
+            pygame.mixer.Sound.play(son_credit2)
+
+        if pos_credits.bottomleft == (0,330):
+            pygame.mixer.Sound.play(son_credit3)
+
+        if pos_credits.bottomleft == (0,460):
+            pygame.mixer.Sound.play(son_credit4)
+
+        if pos_credits.bottomleft == (0,510):
+            pygame.mixer.Sound.play(son_credit5)
+
+        if pos_credits.bottomleft == (0,590):
+            pygame.mixer.Sound.play(son_credit6)
+
+        if pos_credits.bottomleft == (0,705):
+            pygame.mixer.Sound.play(son_credit7)
+
+        if pos_credits.bottomleft == (0,883):
+            pygame.mixer.Sound.play(son_credit8)
+            
 ##Mise à jour de l'affichage :
     blit_fond()
     blit_menu()
+    fenetre.blit(Joueur,(pos_joueur))
 
-    
     end_t = time()
     time_taken = end_t - start_t
     start_t = end_t
@@ -455,45 +545,66 @@ while True:
     fpsPolice = pygame.font.Font('Polices/calibril.ttf',24 )
     fpsTexte = fpsPolice.render('{}'.format(fps),1,(255, 255, 255))
     fenetre.blit(fpsTexte,(0,0))
-    
+
     if jeu == 1 :
         Blit_hud()
-            
-        
-        """vie = 3
-        image_vie = pygame.image.load("Images/Vie_3.png").convert_alpha
-        pos_vie =  pos_vie.get_rect()
-        pos_vie = (0,0)
-        
-        
-        
-        if pos.joueur.top <= tirennemis.bottom:
-            vie -=1
-            
-            if vie == 2 :
-                image_vie_2 = pygame.image.load("Images/Vie_2.png").convert_alpha
-                pos_vie_2 =  pos_vie_2.get_rect()
-                pos_vie_2 = (0,0)
-            
-            if vie == 1 :
-                image_vie_1 = pygame.image.load("Images/Vie_1.png").convert_alpha
-                pos_vie_1 =  pos_vie_1.get_rect()
-                pos_vie_1 = (0,0)
-            
-            if vie == 0 :
-                pos_joueur.bottomleft = (0,0)
-                global jeu
-                jeu = 3"""
-                
-            
+
+
     for tir in listTir:
         tir.afficher()
-        tir.delete()
         tir.move()
+
+    for tir in listTirEnnemie:
+        tir.afficher()
+        tir.move()
+        collision3 = [pos_joueur]
+
+        if tir.rect.bottom > 768 :
+            tir.delete()
+
+        elif tir.rect.collidelist(collision3) != -1 :
+            pygame.mixer.Sound.play(son_joueurtoucher)
+            if vie == 3 :
+                vie = 2
+
+            elif vie == 2 :
+                vie = 1
+
+            elif vie == 1 :
+                vie =0
+            tir.delete()
+
     for ennemie in listEnnemie:
         ennemie.afficher()
-        ennemie.delete()
-#            ennemie.move()
+        ennemie.move()
+        collision4 = [pos_joueur]
+
+        if ennemie.rect.bottom > 768 :
+            ennemie.delete()
+
+        elif ennemie.rect.collidelist(collision4) != -1 :
+            pygame.mixer.Sound.play(son_joueurtoucher)
+            ennemie.delete()
+
+    for tir in listTir:
+        for ennemie in listEnnemie :
+
+            collision = [tir.rect]
+            collision2 = [ennemie.rect]
+
+            if tir.rect.top < 0 :
+                tir.delete()
+
+            elif tir.rect.collidelist(collision2) != -1:
+                pygame.mixer.Sound.play(son_ennemitoucher)
+                tir.delete()
+                
+
+            if ennemie.rect.bottom > 768 :
+                ennemie.delete()
+
+            elif ennemie.rect.collidelist(collision) != -1:
+                ennemie.delete()
 
 
 ##  Remplacement de la souris :
@@ -513,4 +624,3 @@ while True:
         boucle_defilement_etoiles3()
 
     pygame.display.flip()
-    
